@@ -11,10 +11,6 @@ import os
 import json
 import random
 import datetime
-import nest_asyncio
-
-# ----------- Event Loop Fix for Railway -----------
-nest_asyncio.apply()
 
 # ---------- Config ----------
 ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789"))
@@ -199,5 +195,3 @@ async def main():
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
-
-
