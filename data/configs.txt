@@ -1,0 +1,4 @@
+{
+  "1m": ["config1", "config2"],
+  "3m": ["configA", "configB"]
+}
