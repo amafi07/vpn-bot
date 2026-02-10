@@ -11,13 +11,12 @@ import os
 import json
 import random
 import datetime
-import asyncio
 
 # ---------- Config from Environment ----------
-ADMIN_ID = int(os.getenv("ADMIN_ID", "1123292102"))  # ID ادمین
-BOT_TOKEN = os.getenv("BOT_TOKEN", "")  # توکن ربات
-CARD_NUMBER = os.getenv("CARD_NUMBER", "0000-0000-0000-0000")  # شماره کارت
-CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME", "")  # کانال تلگرام
+ADMIN_ID = int(os.getenv("ADMIN_ID"))  # ID ادمین
+BOT_TOKEN = os.getenv("BOT_TOKEN")  # توکن ربات
+CARD_NUMBER = os.getenv("CARD_NUMBER")  # کارت بانکی
+CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME", "")  # کانال تلگرام برای جوین اجباری
 
 # ---------- Utils ----------
 def load_json(path):
@@ -40,17 +39,86 @@ plans = {
     "3m": {"name": "سه ماهه", "price": 250_000, "days": 90},
 }
 
+# ---------- Channel Join Check ----------
+async def is_user_joined(context, user_id):
+    if not CHANNEL_USERNAME:
+        return True  # اگر کانال نداشتیم، همیشه True
+    try:
+        member = await context.bot.get_chat_member(
+            chat_id=CHANNEL_USERNAME,
+            user_id=user_id
+        )
+        return member.status in ["member", "administrator", "creator"]
+    except:
+        return False
+
 # ---------- Handlers ----------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("🛒 خرید اشتراک", callback_data="buy")],
-        [InlineKeyboardButton("📦 دریافت کانفیگ", callback_data="myconfig")],
+        [InlineKeyboardButton("🎁 دریافت کانفیگ رایگان", callback_data="free")],
+        [InlineKeyboardButton("🛒 خرید اشتراک", callback_data="buy")]
     ]
     await update.message.reply_text(
-        "به پنل فروش VPN خوش اومدی 👋",
+        "👋 خوش اومدی!\n\nبرای دریافت کانفیگ رایگان اول عضو کانال شو 👇",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
+# ---------- Free Config ----------
+async def free_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query if update.callback_query else None
+    user_id = str(update.effective_user.id)
+
+    # چک عضویت
+    joined = await is_user_joined(context, update.effective_user.id)
+    if not joined:
+        keyboard = [[
+            InlineKeyboardButton("📢 عضویت در کانال", url=f"https://t.me/vpn_eagleir"),
+        ],[
+            InlineKeyboardButton("✅ عضو شدم", callback_data="check_join")
+        ]]
+        if query:
+            await query.edit_message_text(
+                "❌ برای دریافت کانفیگ رایگان باید عضو کانال بشی:",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        else:
+            await update.message.reply_text(
+                "❌ برای دریافت کانفیگ رایگان باید عضو کانال بشی:",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        return
+
+    users = load_json("data/free_users.json")
+    if user_id in users:
+        if query:
+            await query.edit_message_text("⚠️ شما قبلاً کانفیگ رایگان رو دریافت کردید.")
+        else:
+            await update.message.reply_text("⚠️ شما قبلاً کانفیگ رایگان رو دریافت کردید.")
+        return
+
+    configs = load_json("data/configs.json")
+    free_configs = configs.get("free", ["کانفیگ رایگان موجود نیست"])
+    config = random.choice(free_configs)
+
+    users[user_id] = {
+        "config": config,
+        "date": str(datetime.date.today())
+    }
+    save_json("data/free_users.json", users)
+
+    msg = f"🎁 کانفیگ رایگان شما:\n\n{config}\n\n⚠️ فقط یک‌بار قابل دریافت است"
+    if query:
+        await query.edit_message_text(msg)
+    else:
+        await update.message.reply_text(msg)
+
+# ---------- Check Join Button ----------
+async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    await free_config(update, context)
+
+# ---------- Paid Plans ----------
 async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -128,30 +196,27 @@ async def myconfig(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # ---------- Main ----------
-if __name__ == "__main__":
-    # فقط Run Polling، asyncio رو خود کتابخونه مدیریت میکنه
-    import logging
-    logging.basicConfig(level=logging.INFO)
-    
+async def main():
     application = Application.builder().token(BOT_TOKEN).build()
 
-    # Handlers
+    # Command Handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("confirm", admin_confirm))
+
+    # CallbackQuery Handlers
+    application.add_handler(CallbackQueryHandler(free_config, pattern="^free$"))
+    application.add_handler(CallbackQueryHandler(check_join, pattern="^check_join$"))
     application.add_handler(CallbackQueryHandler(buy, pattern="^buy$"))
     application.add_handler(CallbackQueryHandler(select_plan, pattern="^plan_"))
     application.add_handler(CallbackQueryHandler(myconfig, pattern="^myconfig$"))
+
+    # Message Handlers
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receipt))
 
     print("🔥 VPN Sales Bot Running")
-    # فقط این خط، همه چیز رو درست مدیریت میکنه
-    application.run_polling()
+    await application.run_polling()
 
-
-# ---------- Entry Point ----------
 if __name__ == "__main__":
-    try:
-        asyncio.get_event_loop().run_until_complete(main())
-    except RuntimeError:
-        # اگر لوپ از قبل اجراست
-        asyncio.get_event_loop().create_task(main())
+    import asyncio
+    asyncio.run(main())
+
