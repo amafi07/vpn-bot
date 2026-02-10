@@ -74,7 +74,7 @@ async def free_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [[
             InlineKeyboardButton(
                 "📢 عضویت در کانال",
-                url=f"https://t.me/{CHANNEL_USERNAME.strip('@')}"
+                url=f"https://t.me/{CHANNEL_USERNAME.strip('@vpn_eagleir')}"
             ),
         ],[
             InlineKeyboardButton("✅ عضو شدم", callback_data="check_join")
@@ -170,6 +170,12 @@ async def myconfig(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"📦 کانفیگ شما:\n\n{users[user_id]['config']}\n\n⏳ انقضا: {users[user_id]['expire']}"
     )
 
+# ---------- Check Join Button ----------
+async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    await free_config(update, context)
+
 # ---------- Main ----------
 if __name__ == "__main__":
     # فقط run_polling مستقیم، بدون asyncio.run
@@ -191,4 +197,3 @@ if __name__ == "__main__":
     print("🔥 VPN Sales Bot Running")
     # بدون asyncio.run
     application.run_polling()
-
