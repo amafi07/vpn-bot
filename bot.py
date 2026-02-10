@@ -12,14 +12,11 @@ import json
 import random
 import datetime
 
-import os
-
 # ---------- Config from Environment ----------
-ADMIN_ID = int(os.getenv("ADMIN_ID"))           # عددی
-BOT_TOKEN = os.getenv("BOT_TOKEN")             # توکن ربات
-CARD_NUMBER = os.getenv("CARD_NUMBER")         # شماره کارت
-CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME", "")  # اختیاری، اگر جوین اجباری میخوای
-میخوای
+ADMIN_ID = int(os.getenv("ADMIN_ID"))  # از اینجا ID ادمین رو می‌گیریم
+BOT_TOKEN = os.getenv("BOT_TOKEN")  # توکن ربات رو از env می‌گیریم
+CARD_NUMBER = os.getenv("CARD_NUMBER")  # شماره کارت از env میاد
+CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME", "")  # کانال تلگرام برای جوین اجباری
 
 # ---------- Utils ----------
 def load_json(path):
@@ -105,10 +102,7 @@ async def admin_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     users = load_json("data/users.json")
     orders = load_json("data/orders.json")
     configs = load_json("data/configs.json")
-    plan = orders.get(user_id, {}).get("plan")
-    if not plan:
-        await update.message.reply_text("❌ سفارش پیدا نشد")
-        return
+    plan = orders[user_id]["plan"]
     config = random.choice(configs.get(plan, ["کانفیگ موجود نیست"]))
     expire = datetime.date.today() + datetime.timedelta(days=plans[plan]["days"])
     users[user_id] = {"config": config, "expire": str(expire)}
@@ -146,5 +140,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
