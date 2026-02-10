@@ -128,7 +128,11 @@ async def myconfig(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # ---------- Main ----------
-async def main():
+if __name__ == "__main__":
+    # فقط Run Polling، asyncio رو خود کتابخونه مدیریت میکنه
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    
     application = Application.builder().token(BOT_TOKEN).build()
 
     # Handlers
@@ -140,9 +144,9 @@ async def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receipt))
 
     print("🔥 VPN Sales Bot Running")
+    # فقط این خط، همه چیز رو درست مدیریت میکنه
+    application.run_polling()
 
-    # بدون asyncio.run مستقیم
-    await application.run_polling()
 
 # ---------- Entry Point ----------
 if __name__ == "__main__":
