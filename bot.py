@@ -66,13 +66,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ---------- Free Config ----------
 async def free_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    user_id = str(update.effective_user.id)
+    await query.answer()
 
-    # چک عضویت
+    # چک عضویت در کانال
     joined = await is_user_joined(context, update.effective_user.id)
     if not joined:
         keyboard = [[
-            InlineKeyboardButton("📢 عضویت در کانال", url=f"https://t.me/{CHANNEL_USERNAME.strip('@vpn_eagleir')}"),
+            InlineKeyboardButton(
+                "📢 عضویت در کانال",
+                url=f"https://t.me/{CHANNEL_USERNAME.strip('@')}"
+            ),
         ],[
             InlineKeyboardButton("✅ عضو شدم", callback_data="check_join")
         ]]
@@ -82,24 +85,20 @@ async def free_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    users = load_json("data/free_users.json")
-    if user_id in users:
-        await query.edit_message_text("⚠️ شما قبلاً کانفیگ رایگان رو دریافت کردید.")
+    # دریافت تصادفی کانفیگ رایگان (بدون محدودیت)
+    configs = load_json("data/configs.json")
+    free_configs = configs.get("free", [])
+
+    if not free_configs:
+        await query.edit_message_text("❌ فعلاً کانفیگ رایگان موجود نیست.")
         return
 
-    configs = load_json("data/configs.json")
-    free_configs = configs.get("free", ["کانفیگ رایگان موجود نیست"])
     config = random.choice(free_configs)
 
-    users[user_id] = {"config": config, "date": str(datetime.date.today())}
-    save_json("data/free_users.json", users)
-
-    await query.edit_message_text(f"🎁 کانفیگ رایگان شما:\n\n{config}\n\n⚠️ فقط یک‌بار قابل دریافت است")
-
-async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    await free_config(update, context)
+    await query.edit_message_text(
+        f"🎁 کانفیگ رایگان شما:\n\n{config}\n\n"
+        "♻️ هر زمان خواستی می‌تونی دوباره کانفیگ جدید بگیری"
+    )
 
 # ---------- Paid Plans ----------
 async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
