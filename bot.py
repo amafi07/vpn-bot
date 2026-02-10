@@ -172,26 +172,24 @@ async def myconfig(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # ---------- Main ----------
-async def main():
+if __name__ == "__main__":
+    # فقط run_polling مستقیم، بدون asyncio.run
+    import asyncio
+    from telegram.ext import Application
+
     application = Application.builder().token(BOT_TOKEN).build()
 
-    # Commands
+    # Handlers (مثل قبل)
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("confirm", admin_confirm))
-
-    # Callbacks
     application.add_handler(CallbackQueryHandler(free_config, pattern="^free$"))
     application.add_handler(CallbackQueryHandler(check_join, pattern="^check_join$"))
     application.add_handler(CallbackQueryHandler(buy, pattern="^buy$"))
     application.add_handler(CallbackQueryHandler(select_plan, pattern="^plan_"))
     application.add_handler(CallbackQueryHandler(myconfig, pattern="^myconfig$"))
-
-    # Messages
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receipt))
 
     print("🔥 VPN Sales Bot Running")
-    await application.run_polling()
+    # بدون asyncio.run
+    application.run_polling()
 
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
