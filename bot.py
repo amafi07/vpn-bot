@@ -74,7 +74,7 @@ async def free_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [[
             InlineKeyboardButton(
                 "📢 عضویت در کانال",
-                url=f"https://t.me/{CHANNEL_USERNAME.strip('@vpn_eagleir')}"
+                url=f"https://t.me/vpn_eagleir"
             ),
         ],[
             InlineKeyboardButton("✅ عضو شدم", callback_data="check_join")
