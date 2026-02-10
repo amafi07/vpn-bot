@@ -16,11 +16,11 @@ import nest_asyncio
 # ----------- Event Loop Fix for Railway -----------
 nest_asyncio.apply()
 
-# ---------- Config from Environment ----------
-ADMIN_ID = int(os.getenv("ADMIN_ID", "1123292102"))  # توکن خودت رو جای 123456789 بذار
+# ---------- Config ----------
+ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789"))
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 CARD_NUMBER = os.getenv("CARD_NUMBER", "0000-0000-0000-0000")
-CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME", "")  # @yourchannel
+CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME", "")  # مثل @vpn_eagleir
 
 # ---------- Utils ----------
 def load_json(path):
@@ -164,7 +164,7 @@ async def admin_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def myconfig(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    user_id = str(query.from_user.id)
+    user_id = str(update.effective_user.id)
     users = load_json("data/users.json")
     if user_id not in users:
         await query.edit_message_text(
@@ -200,120 +200,4 @@ if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
 
-    }
-    save_json("data/free_users.json", users)
-
-    msg = f"🎁 کانفیگ رایگان شما:\n\n{config}\n\n⚠️ فقط یک‌بار قابل دریافت است"
-    if query:
-        await query.edit_message_text(msg)
-    else:
-        await update.message.reply_text(msg)
-
-# ---------- Check Join Button ----------
-async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    await free_config(update, context)
-
-# ---------- Paid Plans ----------
-async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    keyboard = [
-        [InlineKeyboardButton("🟢 یک ماهه", callback_data="plan_1m")],
-        [InlineKeyboardButton("🔵 سه ماهه", callback_data="plan_3m")],
-    ]
-    await query.edit_message_text(
-        "پلن مورد نظر رو انتخاب کن:",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-    )
-
-async def select_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_id = str(query.from_user.id)
-    plan_key = query.data.replace("plan_", "")
-    orders = load_json("data/orders.json")
-    orders[user_id] = {"plan": plan_key, "status": "waiting"}
-    save_json("data/orders.json", orders)
-
-    await query.edit_message_text(
-        f"""
-✅ پلن انتخاب شد
-
-💳 مبلغ: {plans[plan_key]['price']:,} تومان
-🏦 کارت: {CARD_NUMBER}
-
-📸 بعد از پرداخت، رسید رو ارسال کن
-"""
-    )
-
-async def receipt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.message.from_user.id)
-    orders = load_json("data/orders.json")
-
-    if user_id in orders and orders[user_id]["status"] == "waiting":
-        await context.bot.send_message(
-            ADMIN_ID,
-            f"📥 رسید جدید از {user_id}\nپلن: {orders[user_id]['plan']}",
-        )
-        orders[user_id]["status"] = "sent"
-        save_json("data/orders.json", orders)
-        await update.message.reply_text("✅ رسید ارسال شد، منتظر تایید ادمین")
-
-async def admin_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message.from_user.id != ADMIN_ID:
-        return
-    user_id = update.message.text.replace("/confirm ", "")
-    users = load_json("data/users.json")
-    orders = load_json("data/orders.json")
-    configs = load_json("data/configs.json")
-    plan = orders[user_id]["plan"]
-    config = random.choice(configs.get(plan, ["کانفیگ موجود نیست"]))
-    expire = datetime.date.today() + datetime.timedelta(days=plans[plan]["days"])
-    users[user_id] = {"config": config, "expire": str(expire)}
-    save_json("data/users.json", users)
-    await context.bot.send_message(
-        user_id,
-        f"📦 کانفیگ شما:\n{config}\n⏳ انقضا: {expire}",
-    )
-
-async def myconfig(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_id = str(query.from_user.id)
-    users = load_json("data/users.json")
-    if user_id not in users:
-        await query.edit_message_text(
-            "❌ اشتراک فعالی نداری\n\nاول از بخش 🛒 خرید اشتراک اقدام کن"
-        )
-        return
-    await query.edit_message_text(
-        f"📦 کانفیگ شما:\n\n{users[user_id]['config']}\n\n⏳ انقضا: {users[user_id]['expire']}"
-    )
-
-# ---------- Main ----------
-async def main():
-    application = Application.builder().token(BOT_TOKEN).build()
-
-    # Command Handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("confirm", admin_confirm))
-
-    # CallbackQuery Handlers
-    application.add_handler(CallbackQueryHandler(free_config, pattern="^free$"))
-    application.add_handler(CallbackQueryHandler(check_join, pattern="^check_join$"))
-    application.add_handler(CallbackQueryHandler(buy, pattern="^buy$"))
-    application.add_handler(CallbackQueryHandler(select_plan, pattern="^plan_"))
-    application.add_handler(CallbackQueryHandler(myconfig, pattern="^myconfig$"))
-
-    # Message Handlers
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receipt))
-
-    print("🔥 VPN Sales Bot Running")
-    await application.run_polling()
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
 
