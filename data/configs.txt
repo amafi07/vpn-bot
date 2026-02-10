@@ -1,5 +1,5 @@
 {
-  "free": ["vless://a26bbed7-a286-4840-84bc-dc102c526777@python.org:80?mode=auto&path=%2Fcategory%2Fmusic&security=none&encryption=none&host=iran.boltboost.gg&type=xhttp#%40vpn_eagleir%20%F0%9F%87%A9%F0%9F%87%AA%20Germany%2C%20Nuremberg%20%5BBL%5D", "vless://41c55d8d-44dd-4437-90ff-4c1eb869a67c@f1.springpaatogh8.store:2087?path=%2F%3Fed%3D2560&security=tls&encryption=none&insecure=1&host=gamepc.sorza.ir&type=ws&allowInsecure=1&sni=digikala.sorza.ir#%40vpn_eagleir%20%F0%9F%87%A8%F0%9F%87%A6%20CA-13711"],
-  "1m": ["کانفیگ یک ماهه 1", "کانفیگ یک ماهه 2"],
-  "3m": ["کانفیگ سه ماهه 1", "کانفیگ سه ماهه 2"]
+  "free": ["کانفیگ_رایگان_1", "vless://41c55d8d-44dd-4437-90ff-4c1eb869a67c@f1.springpaatogh8.store:2087?path=%2F%3Fed%3D2560&security=tls&encryption=none&insecure=1&host=gamepc.sorza.ir&type=ws&allowInsecure=1&sni=digikala.sorza.ir#%40vpn_eagleir%20%F0%9F%87%A8%F0%9F%87%A6%20CA-13711"],
+  "1m": ["plan1_config1", "plan1_config2"],
+  "3m": ["plan3_config1", "plan3_config2"]
 }
