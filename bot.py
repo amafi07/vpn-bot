@@ -11,12 +11,13 @@ import os
 import json
 import random
 import datetime
+import asyncio
 
 # ---------- Config from Environment ----------
-ADMIN_ID = int(os.getenv("ADMIN_ID"))  # از اینجا ID ادمین رو می‌گیریم
-BOT_TOKEN = os.getenv("BOT_TOKEN")  # توکن ربات رو از env می‌گیریم
-CARD_NUMBER = os.getenv("CARD_NUMBER")  # شماره کارت از env میاد
-CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME", "")  # کانال تلگرام برای جوین اجباری
+ADMIN_ID = int(os.getenv("ADMIN_ID", "1123292102"))  # ID ادمین
+BOT_TOKEN = os.getenv("BOT_TOKEN", "")  # توکن ربات
+CARD_NUMBER = os.getenv("CARD_NUMBER", "0000-0000-0000-0000")  # شماره کارت
+CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME", "")  # کانال تلگرام
 
 # ---------- Utils ----------
 def load_json(path):
@@ -139,8 +140,14 @@ async def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receipt))
 
     print("🔥 VPN Sales Bot Running")
+
+    # بدون asyncio.run مستقیم
     await application.run_polling()
 
+# ---------- Entry Point ----------
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    try:
+        asyncio.get_event_loop().run_until_complete(main())
+    except RuntimeError:
+        # اگر لوپ از قبل اجراست
+        asyncio.get_event_loop().create_task(main())
