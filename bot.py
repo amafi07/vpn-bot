@@ -1,6 +1,150 @@
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    CallbackQueryHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
+import os
+import json
+import random
+import datetime
+
 import os
 
-BOT_TOKEN = os.getenv("8063211094:AAGa-1CP3L1EsWaQAo3EjANqXQEahrcfDEs")
-CHANNEL_USERNAME = os.getenv("@vpn_eagleir")
-ADMIN_ID = int(os.getenv("1123292102"))
-CARD_NUMBER = os.getenv("6037-xxxx-xxxx-xxxx")
+# ---------- Config from Environment ----------
+ADMIN_ID = int(os.getenv("ADMIN_ID"))           # عددی
+BOT_TOKEN = os.getenv("BOT_TOKEN")             # توکن ربات
+CARD_NUMBER = os.getenv("CARD_NUMBER")         # شماره کارت
+CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME", "")  # اختیاری، اگر جوین اجباری میخوای
+میخوای
+
+# ---------- Utils ----------
+def load_json(path):
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({}, f)
+        return {}
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_json(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+# ---------- Plans ----------
+plans = {
+    "1m": {"name": "یک ماهه", "price": 100_000, "days": 30},
+    "3m": {"name": "سه ماهه", "price": 250_000, "days": 90},
+}
+
+# ---------- Handlers ----------
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("🛒 خرید اشتراک", callback_data="buy")],
+        [InlineKeyboardButton("📦 دریافت کانفیگ", callback_data="myconfig")],
+    ]
+    await update.message.reply_text(
+        "به پنل فروش VPN خوش اومدی 👋",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    keyboard = [
+        [InlineKeyboardButton("🟢 یک ماهه", callback_data="plan_1m")],
+        [InlineKeyboardButton("🔵 سه ماهه", callback_data="plan_3m")],
+    ]
+    await query.edit_message_text(
+        "پلن مورد نظر رو انتخاب کن:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+async def select_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = str(query.from_user.id)
+    plan_key = query.data.replace("plan_", "")
+    orders = load_json("data/orders.json")
+    orders[user_id] = {"plan": plan_key, "status": "waiting"}
+    save_json("data/orders.json", orders)
+
+    await query.edit_message_text(
+        f"""
+✅ پلن انتخاب شد
+
+💳 مبلغ: {plans[plan_key]['price']:,} تومان
+🏦 کارت: {CARD_NUMBER}
+
+📸 بعد از پرداخت، رسید رو ارسال کن
+"""
+    )
+
+async def receipt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.message.from_user.id)
+    orders = load_json("data/orders.json")
+
+    if user_id in orders and orders[user_id]["status"] == "waiting":
+        await context.bot.send_message(
+            ADMIN_ID,
+            f"📥 رسید جدید از {user_id}\nپلن: {orders[user_id]['plan']}",
+        )
+        orders[user_id]["status"] = "sent"
+        save_json("data/orders.json", orders)
+        await update.message.reply_text("✅ رسید ارسال شد، منتظر تایید ادمین")
+
+async def admin_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.from_user.id != ADMIN_ID:
+        return
+    user_id = update.message.text.replace("/confirm ", "")
+    users = load_json("data/users.json")
+    orders = load_json("data/orders.json")
+    configs = load_json("data/configs.json")
+    plan = orders.get(user_id, {}).get("plan")
+    if not plan:
+        await update.message.reply_text("❌ سفارش پیدا نشد")
+        return
+    config = random.choice(configs.get(plan, ["کانفیگ موجود نیست"]))
+    expire = datetime.date.today() + datetime.timedelta(days=plans[plan]["days"])
+    users[user_id] = {"config": config, "expire": str(expire)}
+    save_json("data/users.json", users)
+    await context.bot.send_message(
+        user_id,
+        f"📦 کانفیگ شما:\n{config}\n⏳ انقضا: {expire}",
+    )
+
+async def myconfig(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = str(query.from_user.id)
+    users = load_json("data/users.json")
+    if user_id not in users:
+        await query.edit_message_text(
+            "❌ اشتراک فعالی نداری\n\nاول از بخش 🛒 خرید اشتراک اقدام کن"
+        )
+        return
+    await query.edit_message_text(
+        f"📦 کانفیگ شما:\n\n{users[user_id]['config']}\n\n⏳ انقضا: {users[user_id]['expire']}"
+    )
+
+# ---------- Main ----------
+def main():
+    app = Application.builder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("confirm", admin_confirm))
+    app.add_handler(CallbackQueryHandler(buy, pattern="^buy$"))
+    app.add_handler(CallbackQueryHandler(select_plan, pattern="^plan_"))
+    app.add_handler(CallbackQueryHandler(myconfig, pattern="^myconfig$"))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receipt))
+    print("🔥 VPN Sales Bot Running")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
+
+
