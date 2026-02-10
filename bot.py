@@ -127,16 +127,20 @@ async def myconfig(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # ---------- Main ----------
-def main():
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("confirm", admin_confirm))
-    app.add_handler(CallbackQueryHandler(buy, pattern="^buy$"))
-    app.add_handler(CallbackQueryHandler(select_plan, pattern="^plan_"))
-    app.add_handler(CallbackQueryHandler(myconfig, pattern="^myconfig$"))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receipt))
+async def main():
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    # Handlers
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("confirm", admin_confirm))
+    application.add_handler(CallbackQueryHandler(buy, pattern="^buy$"))
+    application.add_handler(CallbackQueryHandler(select_plan, pattern="^plan_"))
+    application.add_handler(CallbackQueryHandler(myconfig, pattern="^myconfig$"))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receipt))
+
     print("🔥 VPN Sales Bot Running")
-    app.run_polling()
+    await application.run_polling()
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
