@@ -1,5 +1,15 @@
 {
-  "free": ["کانفیگ_رایگان_1", "vless://41c55d8d-44dd-4437-90ff-4c1eb869a67c@f1.springpaatogh8.store:2087?path=%2F%3Fed%3D2560&security=tls&encryption=none&insecure=1&host=gamepc.sorza.ir&type=ws&allowInsecure=1&sni=digikala.sorza.ir#%40vpn_eagleir%20%F0%9F%87%A8%F0%9F%87%A6%20CA-13711"],
-  "1m": ["plan1_config1", "plan1_config2"],
-  "3m": ["plan3_config1", "plan3_config2"]
+  "free": [
+    "vless://41c55d8d-44dd-4437-90ff-4c1eb869a67c@f1.springpaatogh8.store:2087?path=%2F%3Fed%3D2560&security=tls&encryption=none&insecure=1&host=gamepc.sorza.ir&type=ws&allowInsecure=1&sni=digikala.sorza.ir#%40vpn_eagleir%20%F0%9F%87%A8%F0%9F%87%A6%20CA-13711",
+    "vless://41c55d8d-44dd-4437-90ff-4c1eb869a67c@f1.springpaatogh8.store:2087?path=%2F%3Fed%3D2560&security=tls&encryption=none&insecure=1&host=gamepc.sorza.ir&type=ws&allowInsecure=1&sni=digikala.sorza.ir#%40vpn_eagleir%20%F0%9F%87%A8%F0%9F%87%A6%20CA-13711",
+    "vless://41c55d8d-44dd-4437-90ff-4c1eb869a67c@f1.springpaatogh8.store:2087?path=%2F%3Fed%3D2560&security=tls&encryption=none&insecure=1&host=gamepc.sorza.ir&type=ws&allowInsecure=1&sni=digikala.sorza.ir#%40vpn_eagleir%20%F0%9F%87%A8%F0%9F%87%A6%20CA-13711"
+  ],
+  "1m": [
+    "Plan 1 Config 1",
+    "Plan 1 Config 2"
+  ],
+  "3m": [
+    "Plan 3 Config 1",
+    "Plan 3 Config 2"
+  ]
 }
